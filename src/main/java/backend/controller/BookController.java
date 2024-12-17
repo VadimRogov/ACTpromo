@@ -2,11 +2,19 @@ package backend.controller;
 
 import backend.model.Book;
 import backend.service.BookService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.ArraySchema;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+@Tag(name = "BookController", description = "Контроллер получения, сохранения и удаления книг")
 @Controller
 @RequestMapping("/api/books")
 public class BookController {
@@ -16,7 +24,14 @@ public class BookController {
         this.bookService = bookService;
     }
 
+    @Operation(summary = "Получение всех книг")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Список всех книг получен",
+                    content = @Content(array = @ArraySchema(schema = @Schema(implementation = Book.class)))),
 
+    })
     @GetMapping
     public ResponseEntity<?>getAllBooks() {
         return ResponseEntity.ok(bookService.getAllBooks());
@@ -29,6 +44,17 @@ public class BookController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @Operation(summary = "Сохранение изображения")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Книга успешно сохранена",
+                    content = @Content(schema = @Schema(implementation = Book.class))),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Доступ к запрошенному ресурсу запрещен",
+                    content = @Content)
+    })
     @PostMapping
     public ResponseEntity<Book> addBook(@RequestBody Book book) {
         return ResponseEntity.ok(bookService.addBook(book));
