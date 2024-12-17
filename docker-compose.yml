@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:13
+    container_name: db
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: 1270
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    ports:
+      - "5435:5432"  # Внешний порт 5435, внутренний 5432
+
+  backend:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+    container_name: backend
+    depends_on:
+      - db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/postgres
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: 1270
+    ports:
+      - "8081:8080"  # Внешний порт 8081, внутренний 8080
+
+  frontend:
+    build:
+      context: ./frontend  # Путь к директории с Dockerfile для фронтенда
+      dockerfile: Dockerfile  # Убедитесь, что у вас есть Dockerfile в этой директории
+    container_name: frontend
+    ports:
+      - "3000:3000"  # Внешний порт 80, внутренний 80
+    volumes:
+      - frontend-build:/usr/share/nginx/html  # Монтируем том для доступа к собранным файлам
+
+volumes:
+  db_data:
+  frontend-build:  # Определяем том для фронтенда
