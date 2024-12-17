@@ -2,7 +2,7 @@
 FROM maven:3.8.4-openjdk-17 AS build
 
 # Копируем все файлы проекта в контейнер
-COPY / /usr/src/app
+COPY . /usr/src/app
 
 # Переходим в директорию проекта
 WORKDIR /usr/src/app
@@ -14,8 +14,7 @@ RUN mvn clean package -DskipTests
 FROM openjdk:17-slim
 
 # Копируем JAR-файл из предыдущего этапа сборки бэкенда
-COPY --from=build /usr/src/app/target/AST-0.0.1-SNAPSHOT.jar /app/ast-promo.jar
-
+COPY --from=build /usr/src/app/target/ASTpromo-0.0.1-SNAPSHOT.jar /app/ast-promo.jar
 
 # Указываем порт, который будет использоваться приложением
 EXPOSE 8080
