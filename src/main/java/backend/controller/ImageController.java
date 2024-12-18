@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.logging.Logger;
 
 @Tag(name = "ImageController", description = "Контроллер сохранения и получения изображений")
 @Controller
@@ -30,6 +31,8 @@ public class ImageController {
         this.imageService = imageService;
         this.jwtUtil = jwtUtil;
     }
+
+    private static final Logger logger = Logger.getLogger(ImageController.class.getName());
 
     /*
     @Operation(summary = "Получение всех изображений")
@@ -108,6 +111,7 @@ public class ImageController {
             @Parameter(description = "Название файла") @RequestParam("fileName") String fileName,
             @Parameter(description = "Тип изображения") @RequestParam("imageType") ImageType imageType,
             @Parameter(description = "Файл изображения") @RequestParam("file") MultipartFile file) {
+            logger.info("ImageController: createImage");
         return ResponseEntity.ok(imageService.createImage(bookId, fileName, imageType, file));
     }
 

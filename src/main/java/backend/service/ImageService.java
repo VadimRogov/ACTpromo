@@ -6,6 +6,8 @@ import backend.model.ImageType;
 import backend.repository.BookRepository;
 import backend.repository.ImageRepository;
 import backend.utils.CustomMultipartFile;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
@@ -27,15 +29,16 @@ public class ImageService {
         this.bookRepository = bookRepository;
     }
 
-
+    private static final Logger log = LoggerFactory.getLogger(ImageService.class);
     @Transactional
     public Image createImage(Long bookId, String fileName, ImageType imageType, MultipartFile file) {
+        log.error("Service createImage start");
         try {
             // Проверяем, что файл не пустой
             if (file.isEmpty()) {
                 throw new IllegalArgumentException("File is empty");
             }
-
+            log.error("Поиск книги");
             // Находим книгу по ID
             Book book = bookRepository.findById(bookId)
                     .orElseThrow(() -> new IllegalArgumentException("Book not found with ID: " + bookId));
@@ -47,7 +50,7 @@ public class ImageService {
                     .imageType(imageType)
                     .imageData(file.getBytes())
                     .build();
-
+            log.error("Файл создался");
             // Сохраняем изображение в базу данных
             return imageRepository.save(image);
 
