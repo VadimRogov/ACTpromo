@@ -1,8 +1,10 @@
 package backend.controller;
 
 import backend.model.Book;
+import backend.utils.JwtUtil;
 import backend.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -19,10 +21,13 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("/api/books")
 public class BookController {
     private final BookService bookService;
+    private final JwtUtil jwtUtil;
 
-    public BookController(BookService bookService) {
+    public BookController(BookService bookService, JwtUtil jwtUtil) {
         this.bookService = bookService;
+        this.jwtUtil = jwtUtil;
     }
+
 
     @Operation(summary = "Получение всех книг")
     @ApiResponses({
@@ -71,8 +76,18 @@ public class BookController {
                     content = @Content)
     })
     @PostMapping
-    public ResponseEntity<Book> addBook(@RequestBody Book book) {
-        return ResponseEntity.ok(bookService.addBook(book));
+    public ResponseEntity<Book> addBook(
+            @RequestHeader("Authorization") @Parameter(description = "Токен авторизации", required = true) String authorizationHeader,
+            @RequestBody Book book) {
+
+        String token = authorizationHeader.substring(7); // Убираем "Bearer "
+        String username = jwtUtil.getUsernameFromToken(token);
+
+        if ("admin".equals(username)) {
+            return ResponseEntity.ok(bookService.addBook(book));
+        } else {
+            return ResponseEntity.status(403).build();
+        }
     }
 
     @Operation(summary = "Книга удалена")
