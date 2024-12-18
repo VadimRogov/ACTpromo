@@ -2,7 +2,9 @@ package backend.controller;
 
 import backend.model.Comment;
 import backend.service.CommentService;
+import backend.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,10 +22,13 @@ import org.springframework.web.bind.annotation.*;
 public class CommentController {
 
     private final CommentService commentService;
+    private final JwtUtil jwtUtil;
 
-    public CommentController(CommentService commentService) {
+    public CommentController(CommentService commentService, JwtUtil jwtUtil) {
         this.commentService = commentService;
+        this.jwtUtil = jwtUtil;
     }
+
 
     @Operation(summary = "Получить все комментарии")
     @ApiResponses({
@@ -70,7 +75,13 @@ public class CommentController {
                     content = @Content)
     })
     @PostMapping
-    public ResponseEntity<?> addComment(@RequestBody Comment comment) {
+    public ResponseEntity<?> addComment(
+            @RequestHeader("Authorization") @Parameter(description = "Токен авторизации", required = true) String authorizationHeader,
+            @RequestBody Comment comment) {
+
+        String token = authorizationHeader.substring(7);
+        String username = jwtUtil.getUsernameFromToken(token);
+
         return new ResponseEntity<>(commentService.addComment(comment), HttpStatus.CREATED);
     }
 

@@ -6,12 +6,16 @@ import backend.model.ImageType;
 import backend.repository.BookRepository;
 import backend.repository.ImageRepository;
 import backend.utils.CustomMultipartFile;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ImageService {
@@ -65,10 +69,15 @@ public class ImageService {
         );
     }
 
-
-    public List<Image> getAllImages() {
-        return imageRepository.findAll();
-    }
+    /*
+    // Метод для получения всех изображений
+    public List<MultipartFile> getAllImages() {
+        List<Image> images = imageRepository.findAll();
+        List<MultipartFile> result = new ArrayList<>();
+        for (Image image : images) {
+            result.add(getImageById(image.getId()));
+        }
+    }*/
 
     public Image getByIdImage(Long id) {
         return imageRepository.findById(id).get();

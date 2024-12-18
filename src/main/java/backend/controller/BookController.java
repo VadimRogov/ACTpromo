@@ -102,14 +102,22 @@ public class BookController {
                     content = @Content)
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteBook(@PathVariable Long id) {
-        try {
-            bookService.deleteBook(id);
-            return ResponseEntity.ok().build();
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (Exception e) {
-            return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
-        }
+    public ResponseEntity<?> deleteBook(
+            @RequestHeader("Authorization") @Parameter(description = "Токен авторизации", required = true) String authorizationHeader,
+            @PathVariable Long id) {
+
+        String token = authorizationHeader.substring(7);
+        String username = jwtUtil.getUsernameFromToken(token);
+
+        if ("admin".equals(username)) {
+            try {
+                bookService.deleteBook(id);
+                return ResponseEntity.ok().build();
+            } catch (EntityNotFoundException e) {
+                return ResponseEntity.notFound().build();
+            } catch (Exception e) {
+                return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
+            }
+        }else return ResponseEntity.status(403).build();
     }
 }

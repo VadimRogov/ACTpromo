@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload and View Image</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+<h1>Upload and View Image</h1>
+
+<!-- Форма для загрузки изображения -->
+<form id="uploadForm" enctype="multipart/form-data">
+    <label for="bookId">Book ID:</label>
+    <input type="number" id="bookId" name="bookId" required><br><br>
+
+    <label for="fileName">File Name:</label>
+    <input type="text" id="fileName" name="fileName" required><br><br>
+
+    <label for="imageType">Image Type:</label>
+    <select id="imageType" name="imageType" required>
+        <option value="COVER">COVER</option>
+        <option value="BACK">BACK</option>
+        <option value="OTHER">OTHER</option>
+    </select><br><br>
+
+    <label for="file">Choose Image:</label>
+    <input type="file" id="file" name="file" accept="image/*" required><br><br>
+
+    <button type="button" onclick="uploadImage()">Upload Image</button>
+</form>
+
+<!-- Кнопка для отображения изображения -->
+<div>
+    <label for="imageId">Enter Image ID to View:</label>
+    <input type="number" id="imageId" required>
+    <button type="button" onclick="viewImage()">View Image</button>
+</div>
+
+<!-- Контейнер для отображения изображения -->
+<div id="imageContainer">
+    <img id="uploadedImage" src="" alt="Uploaded Image" style="display: none;">
+</div>
+
+<script>
+    // Функция для загрузки изображения
+    async function uploadImage() {
+        const form = document.getElementById('uploadForm');
+        const formData = new FormData(form);
+
+        try {
+            const response = await fetch('/api/images', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (response.ok) {
+
+                const data = await response.json();
+                console.log("TEST", data);
+                alert('Image uploaded successfully! Image ID: ' + data.id);
+            } else {
+                alert('Failed to upload image: ' + response.statusText);
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            alert('Error uploading image');
+        }
+    }
+
+    // Функция для отображения изображения
+    async function viewImage() {
+        const imageId = document.getElementById('imageId').value;
+
+        try {
+            const response = await fetch(`/api/images/${imageId}`);
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const imageUrl = URL.createObjectURL(blob);
+
+                const img = document.getElementById('uploadedImage');
+                img.src = imageUrl;
+                img.style.display = 'block';
+            } else {
+                alert('Failed to retrieve image: ' + response.statusText);
+            }
+        } catch (error) {
+            console.error('Error retrieving image:', error);
+            alert('Error retrieving image');
+        }
+    }
+</script>
+</body>
+</html>

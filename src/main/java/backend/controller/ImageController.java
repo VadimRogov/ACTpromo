@@ -3,6 +3,7 @@ package backend.controller;
 import backend.model.Image;
 import backend.model.ImageType;
 import backend.service.ImageService;
+import backend.utils.JwtUtil;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,39 +21,43 @@ import java.util.List;
 
 @Tag(name = "ImageController", description = "Контроллер сохранения и получения изображений")
 @Controller
-@RequestMapping("api/images")
+@RequestMapping("/api/images")
 public class ImageController {
     private ImageService imageService;
+    private JwtUtil jwtUtil;
 
-    public ImageController(ImageService imageService) {
+    public ImageController(ImageService imageService, JwtUtil jwtUtil) {
         this.imageService = imageService;
+        this.jwtUtil = jwtUtil;
     }
 
-    @GetMapping
-    public ResponseEntity<List<Image>> getAllImages() {
-        return ResponseEntity.ok(imageService.getAllImages());
-    }
-
-    @Operation(summary = "Сохранение изображения")
+    /*
+    @Operation(summary = "Получение всех изображений")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
-                    description = "Изображение успешно сохранено",
-                    content = @Content(schema = @Schema(implementation = Image.class))),
+                    description = "Успешный запрос",
+                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
             @ApiResponse(
                     responseCode = "403",
                     description = "Доступ к запрошенному ресурсу запрещен",
                     content = @Content)
     })
-    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-    public ResponseEntity<?> createImage(
-            @Parameter(description = "Id книги") @RequestParam("bookId") Long bookId,
-            @Parameter(description = "Название файла") @RequestParam("fileName") String fileName,
-            @Parameter(description = "Тип изображения") @RequestParam("imageType") ImageType imageType,
-            @Parameter(description = "Файл изображения") @RequestParam("file") MultipartFile file) {
-        return ResponseEntity.ok(imageService.createImage(bookId, fileName, imageType, file));
-    }
 
+    @GetMapping
+    @ResponseBody
+    public ResponseEntity<?> getAllImages() {
+        try {
+            // Получаем все изображения из базы данных
+            List<MultipartFile> imageFiles = imageService.getByIdImage();
+
+            // Возвращаем список изображений в ответе
+            return ResponseEntity.ok(imageFiles);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to retrieve images: " + e.getMessage());
+        }
+    }
+    */
     @Operation(summary = "Получение изображения по его id")
     @ApiResponses({
             @ApiResponse(
@@ -84,6 +89,31 @@ public class ImageController {
         }
     }
 
+
+
+    @Operation(summary = "Сохранение изображения")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Изображение успешно сохранено",
+                    content = @Content(schema = @Schema(implementation = Image.class))),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Доступ к запрошенному ресурсу запрещен",
+                    content = @Content)
+    })
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createImage(
+            @Parameter(description = "Id книги") @RequestParam("bookId") Long bookId,
+            @Parameter(description = "Название файла") @RequestParam("fileName") String fileName,
+            @Parameter(description = "Тип изображения") @RequestParam("imageType") ImageType imageType,
+            @Parameter(description = "Файл изображения") @RequestParam("file") MultipartFile file) {
+        return ResponseEntity.ok(imageService.createImage(bookId, fileName, imageType, file));
+    }
+
+
+
+
     @Operation(summary = "Удаление изображения")
     @ApiResponses({
             @ApiResponse(
@@ -96,7 +126,12 @@ public class ImageController {
                     content = @Content)
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteImage(@PathVariable Long id) {
+    public ResponseEntity<?> deleteImage(
+            @RequestHeader("Authorization") @Parameter(description = "Токен авторизации", required = true) String authorizationHeader,
+            @PathVariable Long id) {
+
+        String token = authorizationHeader.substring(7);
+        String username = jwtUtil.getUsernameFromToken(token);
         try {
             imageService.deleteById(id);
             return ResponseEntity.ok().build();

@@ -1,6 +1,5 @@
 package backend.config;
 
-import backend.config.JwtFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -11,7 +10,6 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -27,6 +25,8 @@ public class SecurityConfig {
                         .requestMatchers("/backend/swagger-ui/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/**").permitAll()
+                        .requestMatchers("/index.html").permitAll()
+                        .requestMatchers("/static/**").permitAll()
                         .anyRequest().authenticated() // Все остальные запросы требуют аутентификации
                 );
 
