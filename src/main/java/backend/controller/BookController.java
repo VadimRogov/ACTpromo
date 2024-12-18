@@ -31,12 +31,27 @@ public class BookController {
                     description = "Список всех книг получен",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = Book.class)))),
 
+          @ApiResponse(
+                    responseCode = "403",
+                    description = "Доступ к запрошенному ресурсу запрещен",
+                    content = @Content)
     })
     @GetMapping
     public ResponseEntity<?>getAllBooks() {
         return ResponseEntity.ok(bookService.getAllBooks());
     }
 
+    @Operation(summary = "Получение книги по ID")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Книга по ID получена",
+                    content = @Content(schema = @Schema(implementation = Book.class))),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Доступ к запрошенному ресурсу запрещен",
+                    content = @Content)
+    })
     @GetMapping("/{id}")
     public ResponseEntity<?> getBookById(@PathVariable Long id) {
         return bookService.getBookById(id)
@@ -60,6 +75,17 @@ public class BookController {
         return ResponseEntity.ok(bookService.addBook(book));
     }
 
+    @Operation(summary = "Книга удалена")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Книга удалена",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Доступ к запрошенному ресурсу запрещен",
+                    content = @Content)
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteBook(@PathVariable Long id) {
         try {

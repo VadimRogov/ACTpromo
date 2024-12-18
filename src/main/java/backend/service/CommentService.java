@@ -7,11 +7,11 @@ import org.springframework.stereotype.Service;
 import java.util.List;
 
 @Service
-public class ComentService {
+public class CommentService {
 
     private final CommentRepository commentRepository;
 
-    public ComentService(CommentRepository commentRepository) {
+    public CommentService(CommentRepository commentRepository) {
         this.commentRepository = commentRepository;
     }
 

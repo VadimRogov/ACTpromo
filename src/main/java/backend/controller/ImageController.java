@@ -84,6 +84,17 @@ public class ImageController {
         }
     }
 
+    @Operation(summary = "Удаление изображения")
+    @ApiResponses({
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Изображение удалено",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Доступ к ресурсу запрещен",
+                    content = @Content)
+    })
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteImage(@PathVariable Long id) {
         try {
