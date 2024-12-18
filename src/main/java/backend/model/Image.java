@@ -20,7 +20,7 @@ public class Image {
     @JsonIgnore
     private Book book;
 
-    @Column(name = "fileName", nullable = false)
+    @Column(name = "fileName", nullable = true)
     private String fileName;
 
     @Enumerated(EnumType.STRING)
