@@ -32,7 +32,9 @@ public class ImageService {
     private static final Logger log = LoggerFactory.getLogger(ImageService.class);
     @Transactional
     public Image createImage(Long bookId, String fileName, ImageType imageType, MultipartFile file) {
-        log.error("Service createImage start");
+        log.info("Creating image for book {} with name {}", file.getName());
+        log.info(file.toString());
+        log.error("Service createImage start" + file.getSize());
         try {
             // Проверяем, что файл не пустой
             if (file.isEmpty()) {
