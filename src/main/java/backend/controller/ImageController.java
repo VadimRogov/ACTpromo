@@ -17,8 +17,13 @@ import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Base64;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Logger;
+import java.util.stream.Collectors;
 
 @Tag(name = "ImageController", description = "Контроллер сохранения и получения изображений")
 @Controller
@@ -34,7 +39,27 @@ public class ImageController {
 
     private static final Logger logger = Logger.getLogger(ImageController.class.getName());
 
-    /*
+    // Метод для получения всех изображений, связанных с конкретной книгой
+    @GetMapping("/{bookId}/images")
+    @ResponseBody
+    public ResponseEntity<?> getImagesByBookId(@PathVariable("bookId") Long bookId) {
+        try {
+            // Получаем изображения, связанные с книгой
+            List<MultipartFile> imageFiles = imageService.getImagesByBookId(bookId);
+
+            // Если изображений нет, возвращаем 404
+            if (imageFiles.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No images found for book with ID: " + bookId);
+            }
+
+            // Возвращаем список изображений
+            return ResponseEntity.ok(imageFiles);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to retrieve images: " + e.getMessage());
+        }
+    }
+
+
     @Operation(summary = "Получение всех изображений")
     @ApiResponses({
             @ApiResponse(
@@ -47,20 +72,68 @@ public class ImageController {
                     content = @Content)
     })
 
+    @GetMapping("/images")
+    @ResponseBody()
+    public ResponseEntity<?> getAllImagess() {
+        try {
+            // Получаем все изображения из базы данных
+            List<MultipartFile> imageFiles = imageService.getAllImages();
+
+            // Если изображений нет, возвращаем 404
+            if (imageFiles.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No images found");
+            }
+
+            // Преобразуем каждое изображение в Base64
+            List<Map<String, String>> imageList = imageFiles.stream()
+                    .map(imageFile -> {
+                        try {
+                            String base64Image = Base64.getEncoder().encodeToString(imageFile.getBytes());
+                            return Map.of(
+                                    "fileName", imageFile.getOriginalFilename(),
+                                    "imageType", imageFile.getContentType(),
+                                    "imageData", base64Image
+                            );
+                        } catch (IOException e) {
+                            throw new RuntimeException("Failed to process image: " + e.getMessage());
+                        }
+                    })
+                    .collect(Collectors.toList());
+
+            // Возвращаем список изображений в ответе
+            return ResponseEntity.ok(imageList);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to retrieve images: " + e.getMessage());
+        }
+    }
+
     @GetMapping
     @ResponseBody
     public ResponseEntity<?> getAllImages() {
         try {
             // Получаем все изображения из базы данных
-            List<MultipartFile> imageFiles = imageService.getByIdImage();
+            List<MultipartFile> imageFiles = imageService.getAllImages();
 
-            // Возвращаем список изображений в ответе
-            return ResponseEntity.ok(imageFiles);
-        } catch (Exception e) {
+            // Если изображений нет, возвращаем 404
+            if (imageFiles.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No images found");
+            }
+
+            // Создаем список ответов для каждого изображения
+            List<ResponseEntity<?>> imageResponses = new ArrayList<>();
+            for (MultipartFile imageFile : imageFiles) {
+                ResponseEntity<?> imageResponse = ResponseEntity.ok()
+                        .contentType(MediaType.parseMediaType(imageFile.getContentType()))
+                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + imageFile.getOriginalFilename() + "\"")
+                        .body(imageFile.getBytes());
+                imageResponses.add(imageResponse);
+            }
+            return ResponseEntity.ok(imageResponses);
+        }catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to retrieve images: " + e.getMessage());
         }
     }
-    */
+
     @Operation(summary = "Получение изображения по его id")
     @ApiResponses({
             @ApiResponse(
