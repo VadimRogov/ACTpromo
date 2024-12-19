@@ -13,25 +13,25 @@ public class UserActivity {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "user_ip")
+    @Column(name = "user_ip", nullable = false)
     private String userIp; // IP-адрес пользователя
 
-    @Column(name = "session_id")
+    @Column(name = "session_id", nullable = true)
     private String sessionId; // Идентификатор сессии
 
-    @Column(name = "page_url")
+    @Column(name = "page_url", nullable = false)
     private String pageUrl; // URL страницы
 
-    @Column(name = "event_type")
+    @Column(name = "event_type", nullable = false)
     private String eventType; // Тип события (например, "view", "click", "exit")
 
-    @Column(name = "event_details")
+    @Column(name = "event_details", nullable = true)
     private String eventDetails; // Дополнительные данные о событии
 
-    @Column(name = "referer")
+    @Column(name = "referer", nullable = true)
     private String referer; // Источник трафика (откуда пользователь перешел)
 
-    @Column(name = "timestamp")
+    @Column(name = "timestamp", nullable = false)
     private LocalDateTime timestamp; // Время события
 
     public UserActivity() {}

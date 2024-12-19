@@ -30,4 +30,8 @@ public class CommentService {
     public void deleteCommentById(Long id) {
         commentRepository.deleteById(id);
     }
+
+    public boolean isExist(Long id) {
+        return commentRepository.existsById(id);
+    }
 }

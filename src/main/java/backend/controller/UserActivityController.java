@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -31,6 +32,16 @@ public class UserActivityController {
         this.jwtUtil = jwtUtil;
     }
 
+    // Метод для создания JSON-ответа об ошибке
+    private Map<String, String> createErrorResponse(String message, String details) {
+        Map<String, String> errorResponse = new HashMap<>();
+        errorResponse.put("message", message);
+        if (details != null) {
+            errorResponse.put("details", details);
+        }
+        return errorResponse;
+    }
+
     @Operation(summary = "Сохранение активности")
     @ApiResponses({
             @ApiResponse(
@@ -38,22 +49,28 @@ public class UserActivityController {
                     description = "Активность пользователя успешно сохранена",
                     content = @Content(schema = @Schema(implementation = UserActivity.class))),
             @ApiResponse(
-                    responseCode = "403",
-                    description = "Доступ к запрошенному ресурсу запрещен",
+                    responseCode = "400",
+                    description = "Некорректные параметры запроса",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
                     content = @Content)
     })
     @PostMapping
-    public ResponseEntity<?> saveUserActivity(@RequestHeader("Authorization")
-                                                  @Parameter(description = "Токен авторизации", required = true) String authorizationHeader,
-            @RequestBody UserActivity userActivity) {
+    public ResponseEntity<?> saveUserActivity(@RequestBody UserActivity userActivity) {
+        try {
+            // Проверка корректности параметров
+            if (userActivity == null || userActivity.getUserIp()== null || userActivity.getEventType() == null ||
+            userActivity.getEventType().equals("") || userActivity.getTimestamp() == null) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                        .body(createErrorResponse("Некорректные параметры запроса", "IP и действие не могут быть пустыми"));
+            }
 
-        String token = authorizationHeader.substring(7); // Убираем "Bearer "
-        String username = jwtUtil.getUsernameFromToken(token);
-
-        if ("admin".equals(username)) {
             return ResponseEntity.ok(userActivityService.logActivity(userActivity));
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("Внутренняя ошибка сервера", e.getMessage()));
         }
     }
 
@@ -64,21 +81,35 @@ public class UserActivityController {
                     description = "Успешный запрос",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserActivity.class)))),
             @ApiResponse(
+                    responseCode = "401",
+                    description = "Недействительный или отсутствующий токен авторизации",
+                    content = @Content),
+            @ApiResponse(
                     responseCode = "403",
                     description = "Доступ к запрошенному ресурсу запрещен",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
                     content = @Content)
     })
     @GetMapping
     public ResponseEntity<?> getAllUserActivities(
             @RequestHeader("Authorization") @Parameter(description = "Токен авторизации", required = true) String authorizationHeader) {
 
-        String token = authorizationHeader.substring(7); // Убираем "Bearer "
-        String username = jwtUtil.getUsernameFromToken(token);
+        try {
+            String token = authorizationHeader.substring(7); // Убираем "Bearer "
+            String username = jwtUtil.getUsernameFromToken(token);
 
-        if ("admin".equals(username)) {
+            if (!"admin".equals(username)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(createErrorResponse("Доступ запрещен", "Только администратор может получить данные"));
+            }
+
             return ResponseEntity.ok(userActivityService.getAllUserActivities());
-        } else {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("Внутренняя ошибка сервера", e.getMessage()));
         }
     }
 
@@ -89,21 +120,46 @@ public class UserActivityController {
                     description = "Успешный запрос",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = UserActivity.class)))),
             @ApiResponse(
+                    responseCode = "401",
+                    description = "Недействительный или отсутствующий токен авторизации",
+                    content = @Content),
+            @ApiResponse(
                     responseCode = "403",
                     description = "Доступ к запрошенному ресурсу запрещен",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Активности для указанного IP не найдены",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
                     content = @Content)
     })
     @GetMapping("/ip/{ip}")
-    public ResponseEntity<List<UserActivity>> getUserActivityByIp(
+    public ResponseEntity<?> getUserActivityByIp(
             @RequestHeader("Authorization") @Parameter(description = "Токен авторизации", required = true) String authorizationHeader,
             @PathVariable String ip) {
 
-        String token = authorizationHeader.substring(7);
-        String username = jwtUtil.getUsernameFromToken(token);
-        if ("admin".equals(username)) {
+        try {
+            String token = authorizationHeader.substring(7);
+            String username = jwtUtil.getUsernameFromToken(token);
+
+            if (!"admin".equals(username)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(createErrorResponse("Доступ запрещен", "Только администратор может получить данные"));
+            }
+
             List<UserActivity> activities = userActivityService.getUserActivityByIp(ip);
+            if (activities.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(createErrorResponse("Активности не найдены", "Для IP " + ip + " активности отсутствуют"));
+            }
+
             return ResponseEntity.ok(activities);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(createErrorResponse("Внутренняя ошибка сервера", e.getMessage()));
         }
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
     }
 }

@@ -7,18 +7,10 @@ import backend.repository.BookRepository;
 import backend.repository.ImageRepository;
 import backend.utils.CustomMultipartFile;
 import jakarta.activation.MimetypesFileTypeMap;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.core.io.ByteArrayResource;
-import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class ImageService {
@@ -70,38 +62,13 @@ public class ImageService {
                 "image/jpeg" // MIME-тип (можно изменить на соответствующий)
         );
     }
-    @Transactional
-    // Метод для получения всех изображений
-    public List<MultipartFile> getAllImages() {
-        List<Image> images = imageRepository.findAll();
-        List<MultipartFile> result = new ArrayList<>();
-        for (Image image : images) {
-            result.add(getImageById(image.getId()));
-        }
-        return result;
-    }
 
     @Transactional
-    public List<MultipartFile> getImagesByBookId(Long bookId) {
-        List<Image> images = imageRepository.findByBookId(bookId);
-
-        return images.stream()
-                .map(image -> {
-                    String mimeType = mimeTypesMap.getContentType(image.getFileName()); // Определяем MIME-тип
-                    return new CustomMultipartFile(
-                            image.getFileName(),
-                            image.getImageData(),
-                            mimeType
-                    );
-                })
-                .collect(Collectors.toList());
-    }
-
-    public Image getByIdImage(Long id) {
-        return imageRepository.findById(id).get();
-    }
-
     public void deleteById(Long id) {
         imageRepository.deleteById(id);
+    }
+
+    public boolean isExist(Long id) {
+        return imageRepository.existsById(id);
     }
 }

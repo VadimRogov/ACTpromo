@@ -11,22 +11,20 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.persistence.EntityNotFoundException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "BookController", description = "Контроллер получения, сохранения и удаления книг")
-@Controller
-@RequestMapping("/api/books")
-public class BookController {
-    private final BookService bookService;
-    private final JwtUtil jwtUtil;
+import java.util.Optional;
 
-    public BookController(BookService bookService, JwtUtil jwtUtil) {
-        this.bookService = bookService;
-        this.jwtUtil = jwtUtil;
-    }
+@Tag(name = "BookController", description = "Контроллер получения, сохранения и удаления книг")
+@RestController
+@RequestMapping("/books")
+public class BookController {
+
+    private BookService bookService;
+    private JwtUtil jwtUtil;
+
 
 
     @Operation(summary = "Получение всех книг")
@@ -35,15 +33,22 @@ public class BookController {
                     responseCode = "200",
                     description = "Список всех книг получен",
                     content = @Content(array = @ArraySchema(schema = @Schema(implementation = Book.class)))),
-
-          @ApiResponse(
+            @ApiResponse(
                     responseCode = "403",
                     description = "Доступ к запрошенному ресурсу запрещен",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
                     content = @Content)
     })
     @GetMapping
-    public ResponseEntity<?>getAllBooks() {
-        return ResponseEntity.ok(bookService.getAllBooks());
+    public ResponseEntity<?> getAllBooks() {
+        try {
+            return ResponseEntity.ok(bookService.getAllBooks());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при получении списка книг: " + e.getMessage());
+        }
     }
 
     @Operation(summary = "Получение книги по ID")
@@ -53,26 +58,55 @@ public class BookController {
                     description = "Книга по ID получена",
                     content = @Content(schema = @Schema(implementation = Book.class))),
             @ApiResponse(
-                    responseCode = "403",
-                    description = "Доступ к запрошенному ресурсу запрещен",
+                    responseCode = "404",
+                    description = "Книга не найдена",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
                     content = @Content)
     })
     @GetMapping("/{id}")
-    public ResponseEntity<?> getBookById(@PathVariable Long id) {
-        return bookService.getBookById(id)
-                .map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<Book> getBookById(@PathVariable Long id) {
+        try {
+
+            // Получение книги по ID
+            Optional<Book> bookOptional = bookService.getBookById(id);
+
+            // Если книга не найдена, возвращаем 404
+            if (bookOptional.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+            }
+
+            // Возвращаем книгу с кодом 200
+            return ResponseEntity.ok(bookOptional.get());
+        } catch (Exception e) {
+            // В случае ошибки возвращаем 500
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
-    @Operation(summary = "Сохранение изображения")
+    @Operation(summary = "Сохранение книги")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
                     description = "Книга успешно сохранена",
                     content = @Content(schema = @Schema(implementation = Book.class))),
             @ApiResponse(
+                    responseCode = "400",
+                    description = "Некорректные параметры запроса",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Недействительный или отсутствующий токен авторизации",
+                    content = @Content),
+            @ApiResponse(
                     responseCode = "403",
                     description = "Доступ к запрошенному ресурсу запрещен",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
                     content = @Content)
     })
     @PostMapping
@@ -80,25 +114,52 @@ public class BookController {
             @RequestHeader("Authorization") @Parameter(description = "Токен авторизации", required = true) String authorizationHeader,
             @RequestBody Book book) {
 
-        String token = authorizationHeader.substring(7); // Убираем "Bearer "
-        String username = jwtUtil.getUsernameFromToken(token);
+        try {
+            // Проверка токена авторизации
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            }
 
-        if ("admin".equals(username)) {
+            String token = authorizationHeader.substring(7); // Убираем "Bearer "
+            String username = jwtUtil.getUsernameFromToken(token);
+
+            // Проверка роли пользователя
+            if (!"admin".equals(username)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            // Проверка корректности параметров
+            if (book == null || book.getTitle() == null || book.getTitle().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+            }
+
             return ResponseEntity.ok(bookService.addBook(book));
-        } else {
-            return ResponseEntity.status(403).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
         }
     }
 
-    @Operation(summary = "Книга удалена")
+    @Operation(summary = "Удаление книги")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
                     description = "Книга удалена",
                     content = @Content),
             @ApiResponse(
+                    responseCode = "401",
+                    description = "Недействительный или отсутствующий токен авторизации",
+                    content = @Content),
+            @ApiResponse(
                     responseCode = "403",
                     description = "Доступ к запрошенному ресурсу запрещен",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Книга не найдена",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
                     content = @Content)
     })
     @DeleteMapping("/{id}")
@@ -106,18 +167,29 @@ public class BookController {
             @RequestHeader("Authorization") @Parameter(description = "Токен авторизации", required = true) String authorizationHeader,
             @PathVariable Long id) {
 
-        String token = authorizationHeader.substring(7);
-        String username = jwtUtil.getUsernameFromToken(token);
-
-        if ("admin".equals(username)) {
-            try {
-                bookService.deleteBook(id);
-                return ResponseEntity.ok().build();
-            } catch (EntityNotFoundException e) {
-                return ResponseEntity.notFound().build();
-            } catch (Exception e) {
-                return ResponseEntity.status(500).body("An error occurred: " + e.getMessage());
+        try {
+            // Проверка токена авторизации
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
-        }else return ResponseEntity.status(403).build();
+
+            String token = authorizationHeader.substring(7);
+            String username = jwtUtil.getUsernameFromToken(token);
+
+            // Проверка роли пользователя
+            if (!"admin".equals(username)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            }
+
+            // Проверка существования книги
+            if (!bookService.isExistingBook(id)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Книга с ID " + id + " не найдена");
+            }
+
+            bookService.deleteBook(id);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при удалении книги: " + e.getMessage());
+        }
     }
 }

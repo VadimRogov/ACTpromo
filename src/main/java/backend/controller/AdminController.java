@@ -9,13 +9,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @Tag(name = "AdminController", description = "Контроллер для авторизации администратора и смены пароля")
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
 public class AdminController {
 
     private final AdminService adminService;
@@ -28,44 +28,75 @@ public class AdminController {
 
     @Operation(summary = "Вход администратора", description = "Авторизация администратора с использованием имени пользователя и пароля")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Успешный вход",
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Успешный вход",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = LoginResponse.class))),
-            @ApiResponse(responseCode = "401", description = "Неверные учетные данные")
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Неверные учетные данные",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
+                    content = @Content)
     })
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @RequestBody @Parameter(description = "Данные для входа", required = true) LoginRequest loginRequest) {
 
-        String username = loginRequest.getUsername();
-        String password = loginRequest.getPassword();
+        try {
+            String username = loginRequest.getUsername();
+            String password = loginRequest.getPassword();
 
-        if (adminService.authenticate(username, password)) {
-            String token = jwtUtil.generateToken(username);
-            LoginResponse response = new LoginResponse(token);
-            return ResponseEntity.ok(response);
-        } else {
-            return ResponseEntity.status(401).body("Invalid credentials");
+            if (adminService.authenticate(username, password)) {
+                String token = jwtUtil.generateToken(username);
+                LoginResponse response = new LoginResponse(token);
+                return ResponseEntity.ok(response);
+            } else {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(new ErrorResponse("Неверные учетные данные", "Имя пользователя или пароль неверны"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Ошибка при авторизации", e.getMessage()));
         }
     }
 
     @Operation(summary = "Смена пароля администратора", description = "Смена пароля администратора с проверкой старого пароля")
     @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Пароль успешно изменен"),
-            @ApiResponse(responseCode = "403", description = "Старый пароль неверен")
+            @ApiResponse(
+                    responseCode = "200",
+                    description = "Пароль успешно изменен",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "403",
+                    description = "Старый пароль неверен",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
+                    content = @Content)
     })
     @PatchMapping("/change-password")
     public ResponseEntity<?> changePassword(
             @RequestBody @Parameter(description = "Данные для смены пароля", required = true) ChangePasswordRequest changePasswordRequest) {
 
-        String username = changePasswordRequest.getUsername();
-        String oldPassword = changePasswordRequest.getOldPassword();
-        String newPassword = changePasswordRequest.getNewPassword();
+        try {
+            String username = changePasswordRequest.getUsername();
+            String oldPassword = changePasswordRequest.getOldPassword();
+            String newPassword = changePasswordRequest.getNewPassword();
 
-        if (adminService.changePassword(username, oldPassword, newPassword)) {
-            return ResponseEntity.ok("Password changed successfully");
-        } else {
-            return ResponseEntity.status(403).body("Incorrect old password");
+            if (adminService.changePassword(username, oldPassword, newPassword)) {
+                return ResponseEntity.ok("Password changed successfully");
+            } else {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(new ErrorResponse("Старый пароль неверен", "Проверьте правильность введенного старого пароля"));
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ErrorResponse("Ошибка при смене пароля", e.getMessage()));
         }
     }
 
@@ -143,6 +174,33 @@ public class AdminController {
 
         public void setToken(String token) {
             this.token = token;
+        }
+    }
+
+    // Вспомогательный класс для ответа с ошибкой
+    public static class ErrorResponse {
+        private String message;
+        private String details;
+
+        public ErrorResponse(String message, String details) {
+            this.message = message;
+            this.details = details;
+        }
+
+        public String getMessage() {
+            return message;
+        }
+
+        public void setMessage(String message) {
+            this.message = message;
+        }
+
+        public String getDetails() {
+            return details;
+        }
+
+        public void setDetails(String details) {
+            this.details = details;
         }
     }
 }

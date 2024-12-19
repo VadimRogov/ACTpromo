@@ -36,4 +36,8 @@ public class BookService {
             throw new EntityNotFoundException("Book with id " + id + " not found");
         }
     }
+
+    public boolean isExistingBook(Long id) {
+        return bookRepository.existsById(id);
+    }
 }

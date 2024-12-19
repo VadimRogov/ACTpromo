@@ -39,13 +39,20 @@ public class CommentController {
             @ApiResponse(
                     responseCode = "403",
                     description = "Доступ к ресурсу запрещен",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
                     content = @Content)
     })
     @GetMapping
     public ResponseEntity<?> getAllComments() {
-        return new ResponseEntity<>(commentService.getAllComments(), HttpStatus.OK);
+        try {
+            return new ResponseEntity<>(commentService.getAllComments(), HttpStatus.OK);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при получении комментариев: " + e.getMessage());
+        }
     }
-
 
     @Operation(summary = "Получить комментарий по ID")
     @ApiResponses({
@@ -54,24 +61,48 @@ public class CommentController {
                     description = "Комментарий получен",
                     content = @Content(schema = @Schema(implementation = Comment.class))),
             @ApiResponse(
-                    responseCode = "403",
-                    description = "Доступ к ресурсу запрещен",
+                    responseCode = "404",
+                    description = "Комментарий не найден",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
                     content = @Content)
     })
     @GetMapping("/{id}")
     public ResponseEntity<?> getCommentById(@PathVariable Long id) {
-        return ResponseEntity.ok(commentService.getCommentById(id));
+        try {
+            Comment comment = commentService.getCommentById(id);
+            if (comment == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Комментарий с ID " + id + " не найден");
+            }
+            return ResponseEntity.ok(comment);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при получении комментария: " + e.getMessage());
+        }
     }
 
     @Operation(summary = "Добавить комментарий")
     @ApiResponses({
             @ApiResponse(
-                    responseCode = "200",
+                    responseCode = "201",
                     description = "Комментарий добавлен",
                     content = @Content(schema = @Schema(implementation = Comment.class))),
             @ApiResponse(
+                    responseCode = "400",
+                    description = "Некорректные параметры запроса",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Недействительный или отсутствующий токен авторизации",
+                    content = @Content),
+            @ApiResponse(
                     responseCode = "403",
                     description = "Доступ к ресурсу запрещен",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
                     content = @Content)
     })
     @PostMapping
@@ -79,26 +110,84 @@ public class CommentController {
             @RequestHeader("Authorization") @Parameter(description = "Токен авторизации", required = true) String authorizationHeader,
             @RequestBody Comment comment) {
 
-        String token = authorizationHeader.substring(7);
-        String username = jwtUtil.getUsernameFromToken(token);
+        try {
+            // Проверка токена авторизации
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Недействительный или отсутствующий токен авторизации");
+            }
 
-        return new ResponseEntity<>(commentService.addComment(comment), HttpStatus.CREATED);
+            String token = authorizationHeader.substring(7);
+            String username = jwtUtil.getUsernameFromToken(token);
+
+            // Проверка роли пользователя
+            if (!"admin".equals(username)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Доступ запрещен");
+            }
+
+            // Проверка корректности параметров
+            if (comment == null || comment.getContent() == null || comment.getContent().isEmpty()
+            || comment.getAuthor() == null || comment.getAuthor().isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Некорректные параметры запроса");
+            }
+
+            Comment savedComment = commentService.addComment(comment);
+            return new ResponseEntity<>(savedComment, HttpStatus.CREATED);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при добавлении комментария: " + e.getMessage());
+        }
     }
 
-    @Operation(summary = "Удалить комментарии")
+    @Operation(summary = "Удалить комментарий")
     @ApiResponses({
             @ApiResponse(
-                    responseCode = "200",
-                    description = "Комментарий был удален",
+                    responseCode = "204",
+                    description = "Комментарий удален",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Недействительный или отсутствующий токен авторизации",
                     content = @Content),
             @ApiResponse(
                     responseCode = "403",
                     description = "Доступ к ресурсу запрещен",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Комментарий не найден",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
                     content = @Content)
     })
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteCommentById(@PathVariable Long id) {
-        commentService.deleteCommentById(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    public ResponseEntity<?> deleteCommentById(
+            @RequestHeader("Authorization") @Parameter(description = "Токен авторизации", required = true) String authorizationHeader,
+            @PathVariable Long id) {
+
+        try {
+            // Проверка токена авторизации
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Недействительный или отсутствующий токен авторизации");
+            }
+
+            String token = authorizationHeader.substring(7);
+            String username = jwtUtil.getUsernameFromToken(token);
+
+            // Проверка роли пользователя
+            if (!"admin".equals(username)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Доступ запрещен");
+            }
+
+            // Проверка существования комментария
+            if (!commentService.isExist(id)) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Комментарий с ID " + id + " не найден");
+            }
+
+            commentService.deleteCommentById(id);
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при удалении комментария: " + e.getMessage());
+        }
     }
 }

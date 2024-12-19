@@ -1,5 +1,6 @@
 package backend.controller;
 
+import backend.model.Book;
 import backend.model.Image;
 import backend.model.ImageType;
 import backend.service.ImageService;
@@ -18,12 +19,6 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Base64;
-import java.util.List;
-import java.util.Map;
-import java.util.logging.Logger;
-import java.util.stream.Collectors;
 
 @Tag(name = "ImageController", description = "Контроллер сохранения и получения изображений")
 @Controller
@@ -37,103 +32,6 @@ public class ImageController {
         this.jwtUtil = jwtUtil;
     }
 
-    private static final Logger logger = Logger.getLogger(ImageController.class.getName());
-
-    // Метод для получения всех изображений, связанных с конкретной книгой
-    @GetMapping("/{bookId}/images")
-    @ResponseBody
-    public ResponseEntity<?> getImagesByBookId(@PathVariable("bookId") Long bookId) {
-        try {
-            // Получаем изображения, связанные с книгой
-            List<MultipartFile> imageFiles = imageService.getImagesByBookId(bookId);
-
-            // Если изображений нет, возвращаем 404
-            if (imageFiles.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No images found for book with ID: " + bookId);
-            }
-
-            // Возвращаем список изображений
-            return ResponseEntity.ok(imageFiles);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to retrieve images: " + e.getMessage());
-        }
-    }
-
-
-    @Operation(summary = "Получение всех изображений")
-    @ApiResponses({
-            @ApiResponse(
-                    responseCode = "200",
-                    description = "Успешный запрос",
-                    content = @Content(mediaType = MediaType.APPLICATION_JSON_VALUE)),
-            @ApiResponse(
-                    responseCode = "403",
-                    description = "Доступ к запрошенному ресурсу запрещен",
-                    content = @Content)
-    })
-
-    @GetMapping("/images")
-    @ResponseBody()
-    public ResponseEntity<?> getAllImagess() {
-        try {
-            // Получаем все изображения из базы данных
-            List<MultipartFile> imageFiles = imageService.getAllImages();
-
-            // Если изображений нет, возвращаем 404
-            if (imageFiles.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No images found");
-            }
-
-            // Преобразуем каждое изображение в Base64
-            List<Map<String, String>> imageList = imageFiles.stream()
-                    .map(imageFile -> {
-                        try {
-                            String base64Image = Base64.getEncoder().encodeToString(imageFile.getBytes());
-                            return Map.of(
-                                    "fileName", imageFile.getOriginalFilename(),
-                                    "imageType", imageFile.getContentType(),
-                                    "imageData", base64Image
-                            );
-                        } catch (IOException e) {
-                            throw new RuntimeException("Failed to process image: " + e.getMessage());
-                        }
-                    })
-                    .collect(Collectors.toList());
-
-            // Возвращаем список изображений в ответе
-            return ResponseEntity.ok(imageList);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to retrieve images: " + e.getMessage());
-        }
-    }
-
-    @GetMapping
-    @ResponseBody
-    public ResponseEntity<?> getAllImages() {
-        try {
-            // Получаем все изображения из базы данных
-            List<MultipartFile> imageFiles = imageService.getAllImages();
-
-            // Если изображений нет, возвращаем 404
-            if (imageFiles.isEmpty()) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No images found");
-            }
-
-            // Создаем список ответов для каждого изображения
-            List<ResponseEntity<?>> imageResponses = new ArrayList<>();
-            for (MultipartFile imageFile : imageFiles) {
-                ResponseEntity<?> imageResponse = ResponseEntity.ok()
-                        .contentType(MediaType.parseMediaType(imageFile.getContentType()))
-                        .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + imageFile.getOriginalFilename() + "\"")
-                        .body(imageFile.getBytes());
-                imageResponses.add(imageResponse);
-            }
-            return ResponseEntity.ok(imageResponses);
-        }catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to retrieve images: " + e.getMessage());
-        }
-    }
-
     @Operation(summary = "Получение изображения по его id")
     @ApiResponses({
             @ApiResponse(
@@ -141,8 +39,12 @@ public class ImageController {
                     description = "Успешный запрос",
                     content = @Content(mediaType = MediaType.IMAGE_PNG_VALUE)),
             @ApiResponse(
-                    responseCode = "403",
-                    description = "Доступ к запрошенному ресурсу запрещен",
+                    responseCode = "404",
+                    description = "Изображение не найдено",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
                     content = @Content)
     })
     @GetMapping("/{id}")
@@ -150,8 +52,14 @@ public class ImageController {
     public ResponseEntity<?> getImage(
             @Parameter(description = "ID изображения", required = true) @PathVariable("id") Long id) {
         try {
+
             // Получаем изображение из базы данных
             MultipartFile imageFile = imageService.getImageById(id);
+
+            // Проверка существования изображения
+            if (imageFile == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Изображение с ID " + id + " не найдено");
+            }
 
             // Возвращаем изображение в ответе
             return ResponseEntity.ok()
@@ -159,9 +67,11 @@ public class ImageController {
                     .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + imageFile.getOriginalFilename() + "\"")
                     .body(imageFile.getBytes());
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Image not found with ID: " + id);
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Изображение с ID " + id + " не найдено");
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Ошибка при чтении изображения: " + e.getMessage());
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Failed to retrieve image: " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось получить изображение: " + e.getMessage());
         }
     }
 
@@ -174,21 +84,77 @@ public class ImageController {
                     description = "Изображение успешно сохранено",
                     content = @Content(schema = @Schema(implementation = Image.class))),
             @ApiResponse(
+                    responseCode = "400",
+                    description = "Некорректные параметры запроса",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "401",
+                    description = "Недействительный или отсутствующий токен авторизации",
+                    content = @Content),
+            @ApiResponse(
                     responseCode = "403",
                     description = "Доступ к запрошенному ресурсу запрещен",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Книга с указанным ID не найдена",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "415",
+                    description = "Неподдерживаемый формат файла",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
                     content = @Content)
     })
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> createImage(
+            @RequestHeader("Authorization") @Parameter(description = "Токен авторизации", required = true) String authorizationHeader,
             @Parameter(description = "Id книги") @RequestParam("bookId") Long bookId,
             @Parameter(description = "Название файла") @RequestParam("fileName") String fileName,
             @Parameter(description = "Тип изображения") @RequestParam("imageType") ImageType imageType,
             @Parameter(description = "Файл изображения") @RequestParam("file") MultipartFile file) {
-            logger.info("ImageController: createImage");
-        return ResponseEntity.ok(imageService.createImage(bookId, fileName, imageType, file));
+
+        // Проверка токена авторизации
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Недействительный или отсутствующий токен авторизации");
+        }
+
+        String token = authorizationHeader.substring(7);
+        String username = jwtUtil.getUsernameFromToken(token);
+
+        // Проверка роли пользователя
+        if (!"admin".equals(username)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Доступ запрещен");
+        }
+
+        // Проверка корректности параметров
+        if (bookId == null || fileName == null || imageType == null || file == null || file.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Некорректные параметры запроса");
+        }
+
+        // Проверка поддерживаемого формата файла
+        String contentType = file.getContentType();
+        if (contentType == null || !contentType.startsWith("image/")) {
+            return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body("Неподдерживаемый формат файла");
+        }
+
+        try {
+            // Проверка существования книги
+            if (!imageService.isExist(bookId)) {
+                throw new EntityNotFoundException("Книга с ID " + bookId + " не найдена");
+            }
+
+            // Сохранение изображения
+            Image savedImage = imageService.createImage(bookId, fileName, imageType, file);
+            return ResponseEntity.ok(savedImage);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось сохранить изображение: " + e.getMessage());
+        }
     }
-
-
 
 
     @Operation(summary = "Удаление изображения")
@@ -198,8 +164,20 @@ public class ImageController {
                     description = "Изображение удалено",
                     content = @Content),
             @ApiResponse(
+                    responseCode = "401",
+                    description = "Недействительный или отсутствующий токен авторизации",
+                    content = @Content),
+            @ApiResponse(
                     responseCode = "403",
                     description = "Доступ к ресурсу запрещен",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "404",
+                    description = "Изображение с указанным ID не найдено",
+                    content = @Content),
+            @ApiResponse(
+                    responseCode = "500",
+                    description = "Внутренняя ошибка сервера",
                     content = @Content)
     })
     @DeleteMapping("/{id}")
@@ -207,15 +185,27 @@ public class ImageController {
             @RequestHeader("Authorization") @Parameter(description = "Токен авторизации", required = true) String authorizationHeader,
             @PathVariable Long id) {
 
+        // Проверка токена авторизации
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Недействительный или отсутствующий токен авторизации");
+        }
+
         String token = authorizationHeader.substring(7);
         String username = jwtUtil.getUsernameFromToken(token);
+
+        // Проверка роли пользователя
+        if (!"admin".equals(username)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Доступ запрещен");
+        }
+
         try {
+            // Удаление изображения
             imageService.deleteById(id);
-            return ResponseEntity.ok().build();
-        }catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        }catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+            return ResponseEntity.ok().body("Изображение успешно удалено");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Изображение с ID " + id + " не найдено");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Не удалось удалить изображение: " + e.getMessage());
         }
     }
 }
