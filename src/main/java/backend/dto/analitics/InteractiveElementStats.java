@@ -1,29 +1,31 @@
 package backend.dto.analitics;
 
 public class InteractiveElementStats {
-    private String elementId; // Идентификатор элемента
-    private int interactions; // Количество взаимодействий
+
+    private String typeElement; // Идентификатор элемента
+    private Long interactions; // Количество взаимодействий
 
     public InteractiveElementStats() {}
 
-    public InteractiveElementStats(String elementId, int interactions) {
-        this.elementId = elementId;
+    public InteractiveElementStats(String typeElement, Long interactions) {
+        this.typeElement = typeElement;
         this.interactions = interactions;
     }
 
-    public String getElementId() {
-        return elementId;
+
+    public String getTypeElement() {
+        return typeElement;
     }
 
-    public void setElementId(String elementId) {
-        this.elementId = elementId;
+    public void setTypeElement(String typeElement) {
+        this.typeElement = typeElement;
     }
 
-    public int getInteractions() {
+    public Long getInteractions() {
         return interactions;
     }
 
-    public void setInteractions(int interactions) {
+    public void setInteractions(Long interactions) {
         this.interactions = interactions;
     }
 }

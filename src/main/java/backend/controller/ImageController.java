@@ -142,7 +142,7 @@ public class ImageController {
 
         try {
             // Проверка существования книги
-            if (!imageService.isExist(bookId)) {
+            if (!imageService.isExistBook(bookId)) {
                 throw new EntityNotFoundException("Книга с ID " + bookId + " не найдена");
             }
 

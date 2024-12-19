@@ -20,6 +20,7 @@ public class ImageService {
     public ImageService(ImageRepository imageRepository, BookRepository bookRepository) {
         this.imageRepository = imageRepository;
         this.bookRepository = bookRepository;
+
     }
 
     private final MimetypesFileTypeMap mimeTypesMap = new MimetypesFileTypeMap();
@@ -70,5 +71,9 @@ public class ImageService {
 
     public boolean isExist(Long id) {
         return imageRepository.existsById(id);
+    }
+
+    public boolean isExistBook (Long id) {
+        return bookRepository.existsById(id);
     }
 }

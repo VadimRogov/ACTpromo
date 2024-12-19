@@ -58,16 +58,26 @@ public class UserActivityController {
                     content = @Content)
     })
     @PostMapping
-    public ResponseEntity<?> saveUserActivity(@RequestBody UserActivity userActivity) {
+    public ResponseEntity<?> saveUserActivity(@RequestBody List<UserActivity> userActivities) {
         try {
             // Проверка корректности параметров
-            if (userActivity == null || userActivity.getUserIp()== null || userActivity.getEventType() == null ||
-            userActivity.getEventType().equals("") || userActivity.getTimestamp() == null) {
+            if (userActivities == null || userActivities.isEmpty()) {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST)
-                        .body(createErrorResponse("Некорректные параметры запроса", "IP и действие не могут быть пустыми"));
+                        .body(createErrorResponse("Некорректные параметры запроса", "Список активностей не может быть пустым"));
             }
 
-            return ResponseEntity.ok(userActivityService.logActivity(userActivity));
+            // Валидация каждой активности в списке
+            for (UserActivity activity : userActivities) {
+                if (activity.getUserIp() == null || activity.getEventType() == null ||
+                        activity.getEventType().equals("") || activity.getTimestamp() == null) {
+                    return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                            .body(createErrorResponse("Некорректные параметры запроса", "IP, тип события и временная метка не могут быть пустыми"));
+                }
+            }
+
+            // Сохранение активностей
+            List<UserActivity> savedActivities = userActivityService.logActivity(userActivities);
+            return ResponseEntity.ok(savedActivities);
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body(createErrorResponse("Внутренняя ошибка сервера", e.getMessage()));

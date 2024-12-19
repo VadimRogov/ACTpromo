@@ -19,12 +19,16 @@ import java.util.Optional;
 
 @Tag(name = "BookController", description = "Контроллер получения, сохранения и удаления книг")
 @RestController
-@RequestMapping("/books")
+@RequestMapping("/api/books")
 public class BookController {
 
     private BookService bookService;
     private JwtUtil jwtUtil;
 
+    public BookController(BookService bookService, JwtUtil jwtUtil) {
+        this.bookService = bookService;
+        this.jwtUtil = jwtUtil;
+    }
 
 
     @Operation(summary = "Получение всех книг")
@@ -115,13 +119,15 @@ public class BookController {
             @RequestBody Book book) {
 
         try {
+            String token = authorizationHeader.substring(7); // Убираем "Bearer "
+            String username = jwtUtil.getUsernameFromToken(token);
+
             // Проверка токена авторизации
             if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
             }
 
-            String token = authorizationHeader.substring(7); // Убираем "Bearer "
-            String username = jwtUtil.getUsernameFromToken(token);
+
 
             // Проверка роли пользователя
             if (!"admin".equals(username)) {
@@ -135,7 +141,7 @@ public class BookController {
 
             return ResponseEntity.ok(bookService.addBook(book));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(null);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
 

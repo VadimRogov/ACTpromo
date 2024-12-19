@@ -4,6 +4,7 @@ import backend.dto.analitics.InteractiveElementStats;
 import backend.dto.analitics.PageStats;
 import backend.dto.analitics.TimeOnSiteStats;
 import backend.dto.analitics.TrafficSourceStats;
+import backend.model.EventType;
 import backend.model.UserActivity;
 import backend.repository.UserActivityRepository;
 import org.springframework.stereotype.Service;
@@ -69,7 +70,7 @@ public class AnalyticsService {
 
     public List<PageStats> getPopularPages() {
         return userActivityRepository.findAll().stream()
-                .filter(activity -> "view".equals(activity.getEventType()))
+                .filter(activity -> EventType.VIEW.equals(activity.getEventType()))
                 .collect(Collectors.groupingBy(UserActivity::getPageUrl))
                 .entrySet().stream()
                 .map(entry -> {
@@ -82,9 +83,16 @@ public class AnalyticsService {
     }
 
     public List<InteractiveElementStats> getInteractiveElementInteractions() {
-        return List.of(
-                new InteractiveElementStats("button1", 100),
-                new InteractiveElementStats("link1", 50)
-        );
+        return userActivityRepository.findAll().stream()
+                .filter(activity -> EventType.CLICK.equals(activity.getEventType()) || EventType.CUBE.equals(activity.getEventType()))
+                .collect(Collectors.groupingBy(UserActivity::getEventType))
+                .entrySet().stream()
+                .map(entry -> {
+                    InteractiveElementStats stats = new InteractiveElementStats();
+                    stats.setTypeElement(entry.getKey().toString());
+                    stats.setInteractions((long) entry.getValue().size());
+                    return stats;
+                })
+                .collect(Collectors.toList());
     }
 }

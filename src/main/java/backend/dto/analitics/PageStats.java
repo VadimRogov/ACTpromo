@@ -1,6 +1,7 @@
 package backend.dto.analitics;
 
 public class PageStats {
+
     private String pageUrl; // URL страницы
     private int views; // Количество просмотров
 
@@ -10,6 +11,8 @@ public class PageStats {
         this.pageUrl = pageUrl;
         this.views = views;
     }
+
+
 
     public String getPageUrl() {
         return pageUrl;
