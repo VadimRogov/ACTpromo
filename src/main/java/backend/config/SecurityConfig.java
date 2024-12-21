@@ -31,6 +31,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated() // Все остальные запросы требуют аутентификации
                 );
 
+        // Добавляем фильтр для обработки UTM-меток перед JwtFilter
+        http.addFilterBefore(utmDataFilter(), JwtFilter.class);
+
         // Добавляем фильтр для обработки JWT перед UsernamePasswordAuthenticationFilter
         http.addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
 
@@ -40,6 +43,11 @@ public class SecurityConfig {
     @Bean
     public JwtFilter jwtFilter() {
         return new JwtFilter();
+    }
+
+    @Bean
+    public UtmDataFilter utmDataFilter() {
+        return new UtmDataFilter();
     }
 
     @Bean
