@@ -40,8 +40,9 @@ services:
   nginx:
     image: nginx:latest
     container_name: nginx
+    network_mode: host  # Используем сеть хоста
     ports:
-      - "80:80"  # Внешний порт 80, внутренний 80
+      - "81:80"  # Внешний порт 80, внутренний 80
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d  # Монтируем конфигурационные файлы Nginx
       - ./nginx/logs:/var/www/httpd-logs  # Монтируем директорию для логов
