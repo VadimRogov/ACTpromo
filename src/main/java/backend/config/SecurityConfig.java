@@ -25,6 +25,7 @@ public class SecurityConfig {
                         .requestMatchers("/backend/swagger-ui/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
                         .requestMatchers("/api/**").permitAll()
+                        .requestMatchers("/api/utm/**").permitAll() // Разрешаем доступ к UTM-маршрутам
                         .requestMatchers("/index.html").permitAll()
                         .requestMatchers("/static/**").permitAll()
                         .anyRequest().authenticated() // Все остальные запросы требуют аутентификации

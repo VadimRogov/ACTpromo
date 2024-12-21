@@ -19,10 +19,10 @@ public class JwtFilter extends OncePerRequestFilter {
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain chain)
             throws ServletException, IOException {
 
-        // Проверяем, является ли запрос к Swagger UI или OpenAPI документации
+        // Пропускаем запросы к Swagger UI, OpenAPI и UTM-маршрутам
         String path = request.getRequestURI();
-        if (isSwaggerPath(path) || isOpenApiPath(path)) {
-            chain.doFilter(request, response); // Пропускаем запросы к Swagger и OpenAPI
+        if (isSwaggerPath(path) || isOpenApiPath(path) || path.startsWith("/api/utm")) {
+            chain.doFilter(request, response);
             return;
         }
 
