@@ -31,12 +31,11 @@ public class SecurityConfig {
                         .anyRequest().authenticated() // Все остальные запросы требуют аутентификации
                 );
 
-        // Добавляем фильтр для обработки UTM-меток перед JwtFilter
-        http.addFilterBefore(utmDataFilter, JwtFilter.class);
-
         // Добавляем фильтр для обработки JWT перед UsernamePasswordAuthenticationFilter
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
 
+        // Добавляем фильтр для обработки UTM-меток перед JwtFilter
+        http.addFilterBefore(utmDataFilter, JwtFilter.class);
 
 
         return http.build();
