@@ -44,6 +44,7 @@ services:
       - "80:80"  # Внешний порт 80, внутренний 80
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d  # Монтируем конфигурационные файлы Nginx
+      - ./nginx/logs:/var/www/httpd-logs  # Монтируем директорию для логов
       - frontend-build:/usr/share/nginx/html  # Монтируем статику фронтенда
     depends_on:
       - backend
