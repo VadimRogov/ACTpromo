@@ -31,6 +31,7 @@ public class UserActivity {
 
     @Column(name = "timestamp", nullable = false)
     private LocalDateTime timestamp; // Время события
+
     @Column(name = "count_event", nullable = false)
     private Long countEvent;
 

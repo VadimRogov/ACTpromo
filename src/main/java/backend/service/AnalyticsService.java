@@ -46,6 +46,7 @@ public class AnalyticsService {
                 .collect(Collectors.toList());
     }
 
+
     // Метод для вычисления общего времени и среднего общего времени проведенного на сайте
     public TimeOnSiteSummary getTimeOnSite() {
         try {
@@ -87,6 +88,7 @@ public class AnalyticsService {
             return new TimeOnSiteSummary(0, 0); // Возвращаем пустой результат в случае ошибки
         }
     }
+
 
     // Метод для вычисления времени на сайте для одного IP-адреса
     private long calculateTimeOnSiteForIp(List<UserActivity> activities) {
@@ -214,7 +216,17 @@ public class AnalyticsService {
     @Transactional(readOnly = true)
     public List<InteractiveElementStats> getInteractiveElementInteractions() {
         try {
-            List<Object[]> results = userActivityRepository.findInteractiveElementStats();
+            // Список нужных типов событий
+            List<EventType> eventTypes = Arrays.asList(
+                    EventType.BUTTER_FLY_COUNT,
+                    EventType.TREE_COUNT,
+                    EventType.CUB_COUNT,
+                    EventType.COMMENT_COUNT,
+                    EventType.CATALOG_COUNT
+            );
+
+            // Выполняем запрос с фильтрацией по нужным типам
+            List<Object[]> results = userActivityRepository.findInteractiveElementStats(eventTypes);
 
             if (results == null || results.isEmpty()) {
                 throw new IllegalStateException("Результаты запроса пусты или отсутствуют.");

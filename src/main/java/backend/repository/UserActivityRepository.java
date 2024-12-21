@@ -17,8 +17,9 @@ public interface UserActivityRepository extends JpaRepository<UserActivity, Long
     // JPQL запрос для группировки и суммирования
     @Query("SELECT u.eventType, SUM(u.countEvent) " +
             "FROM UserActivity u " +
+            "WHERE u.eventType IN :eventTypes " +
             "GROUP BY u.eventType")
-    List<Object[]> findInteractiveElementStats();
+    List<Object[]> findInteractiveElementStats(@Param("eventTypes") List<EventType> eventTypes);
 
     // Найти все события с типом MAIN_SHOP
     List<UserActivity> findByEventType(EventType eventType);

@@ -2,9 +2,13 @@ package backend.model;
 
 public enum EventType {
     ENTER,
-    CLICK,
     EXIT,
     VIEW,
-    CUBE,
-    MAIN_SHOP
+    MAIN_SHOP,
+    BUTTER_FLY_COUNT, // бабочки
+    TREE_COUNT, // деревья
+    CUB_COUNT, // куб
+    COMMENT_COUNT, //коммент
+    CATALOG_COUNT, // каталог
+    CONTENT_COUNT
 }
