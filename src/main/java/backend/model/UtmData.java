@@ -16,6 +16,7 @@ public class UtmData {
     private String utmContent;
     private String utmTerm;
 
+
     // Конструкторы, геттеры и сеттеры
     public UtmData() {
     }
