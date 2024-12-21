@@ -43,7 +43,6 @@ services:
     network_mode: host  # Используем сеть хоста
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d  # Монтируем конфигурационные файлы Nginx
-      - ./nginx/logs:/var/log/nginx  # Монтируем директорию для логов (стандартный путь)
       - frontend-build:/usr/share/nginx/html  # Монтируем статику фронтенда
     depends_on:
       - backend
