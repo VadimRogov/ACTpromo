@@ -7,8 +7,14 @@ WORKDIR /usr/src/app/frontend
 # Устанавливаем git
 RUN apk add --no-cache git
 
-# Клонируем репозиторий фронтенда
-RUN git clone https://github.com/BaronGalileo/Act-books .
+# Клонируем репозиторий фронтенда (если директория пуста)
+RUN git clone https://github.com/BaronGalileo/Act-books . || true
+
+# Переключаемся на нужную ветку (например, main)
+RUN git checkout main
+
+# Обновляем репозиторий до последней версии
+RUN git pull origin main
 
 # Устанавливаем зависимости
 RUN npm install
