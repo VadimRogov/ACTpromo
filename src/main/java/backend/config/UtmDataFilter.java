@@ -35,6 +35,14 @@ public class UtmDataFilter extends OncePerRequestFilter {
             return;
         }
 
+        String pathe = request.getRequestURI();
+
+        // Пропускаем запросы, которые не содержат UTM-меток
+        if (!pathe.contains("utm")) {
+            chain.doFilter(request, response);
+            return;
+        }
+
         // Извлекаем UTM-метки из запроса
         String utmSource = request.getParameter("utm_source");
         String utmMedium = request.getParameter("utm_medium");
@@ -49,8 +57,13 @@ public class UtmDataFilter extends OncePerRequestFilter {
         logger.info("UTM-Content: {}", utmContent);
         logger.info("UTM-Term: {}", utmTerm);
 
-        // Сохраняем UTM-метки в базу данных
-        utmDataService.saveUtmData(utmSource, utmMedium, utmCampaign, utmContent, utmTerm);
+        // Проверяем, что UTM-метки не null и не пустые перед сохранением
+        if (utmSource != null || utmMedium != null || utmCampaign != null || utmContent != null || utmTerm != null) {
+            // Сохраняем UTM-метки в базу данных
+            utmDataService.saveUtmData(utmSource, utmMedium, utmCampaign, utmContent, utmTerm);
+        } else {
+        logger.warn("No UTM parameters found in the request.");
+        }
 
         // Продолжаем выполнение цепочки фильтров
         chain.doFilter(request, response);
