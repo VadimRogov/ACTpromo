@@ -44,6 +44,9 @@ services:
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d  # Монтируем конфигурационные файлы Nginx
       - frontend-build:/usr/share/nginx/html  # Монтируем статику фронтенда
+      - ./nginx/logs:/var/log/nginx
+    command: >
+      sh -c "mkdir -p /var/log/nginx && chmod -R 755 /var/log/nginx && nginx -g 'daemon off;'"
     depends_on:
       - backend
       - frontend
