@@ -2,6 +2,7 @@ package backend.controller;
 
 import backend.model.UtmData;
 import backend.service.UtmDataService;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -18,14 +19,15 @@ public class UtmDataController {
         this.utmDataService = utmDataService;
     }
 
-    @PostMapping("/save")
-    public ResponseEntity<String> saveUtmData(
-            @RequestParam(value = "utm_source", required = false) String utmSource,
-            @RequestParam(value = "utm_medium", required = false) String utmMedium,
-            @RequestParam(value = "utm_campaign", required = false) String utmCampaign,
-            @RequestParam(value = "utm_content", required = false) String utmContent,
-            @RequestParam(value = "utm_term", required = false) String utmTerm
-    ) {
+    @GetMapping("/save")
+    public ResponseEntity<String> saveUtmData(HttpServletRequest request) {
+        // Извлекаем UTM-метки из URL
+        String utmSource = request.getParameter("utm_source");
+        String utmMedium = request.getParameter("utm_medium");
+        String utmCampaign = request.getParameter("utm_campaign");
+        String utmContent = request.getParameter("utm_content");
+        String utmTerm = request.getParameter("utm_term");
+
         // Логирование UTM-меток
         System.out.println("UTM-Source: " + utmSource);
         System.out.println("UTM-Medium: " + utmMedium);
@@ -35,11 +37,7 @@ public class UtmDataController {
 
         // Сохраняем UTM-метки в базу данных
         try {
-            utmDataService.saveUtmData(utmSource,
-                    utmMedium,
-                    utmCampaign,
-                    utmContent,
-                    utmTerm);
+            utmDataService.saveUtmData(utmSource, utmMedium, utmCampaign, utmContent, utmTerm);
             return ResponseEntity.ok("UTM-метки успешно сохранены!");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
