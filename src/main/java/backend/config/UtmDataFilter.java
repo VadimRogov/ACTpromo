@@ -37,7 +37,7 @@ public class UtmDataFilter implements Filter {
         System.out.println("UTM-Content: " + utmContent);
         System.out.println("UTM-Term: " + utmTerm);
 
-        // Сохраняем UTM-метки в базу данных
+        // Перенаправляем запрос на контроллер
         if (utmSource != null || utmMedium != null || utmCampaign != null) {
             utmDataService.saveUtmData(utmSource, utmMedium, utmCampaign, utmContent, utmTerm);
         }
