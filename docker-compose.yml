@@ -41,11 +41,9 @@ services:
     image: nginx:latest
     container_name: nginx
     network_mode: host  # Используем сеть хоста
-    ports:
-      - "81:80"  # Внешний порт 80, внутренний 80
     volumes:
       - ./nginx/conf.d:/etc/nginx/conf.d  # Монтируем конфигурационные файлы Nginx
-      - ./nginx/logs:/var/www/httpd-logs  # Монтируем директорию для логов
+      - ./nginx/logs:/var/log/nginx  # Монтируем директорию для логов (стандартный путь)
       - frontend-build:/usr/share/nginx/html  # Монтируем статику фронтенда
     depends_on:
       - backend
