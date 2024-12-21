@@ -37,6 +37,18 @@ services:
     volumes:
       - frontend-build:/usr/share/nginx/html  # Монтируем том для доступа к собранным файлам
 
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    ports:
+      - "80:80"  # Внешний порт 80, внутренний 80
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d  # Монтируем конфигурационные файлы Nginx
+      - frontend-build:/usr/share/nginx/html  # Монтируем статику фронтенда
+    depends_on:
+      - backend
+      - frontend
+
 volumes:
   db_data:
   frontend-build:
