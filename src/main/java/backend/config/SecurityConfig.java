@@ -16,7 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter, UtmDataFilter utmDataFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable) // Отключаем CSRF
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Отключаем сессии
@@ -31,23 +31,13 @@ public class SecurityConfig {
                         .anyRequest().authenticated() // Все остальные запросы требуют аутентификации
                 );
 
-        // Добавляем фильтр для обработки UTM-меток перед JwtFilter
-        http.addFilterBefore(utmDataFilter(), JwtFilter.class);
-
         // Добавляем фильтр для обработки JWT перед UsernamePasswordAuthenticationFilter
-        http.addFilterBefore(jwtFilter(), UsernamePasswordAuthenticationFilter.class);
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        // Добавляем фильтр для обработки UTM-меток перед JwtFilter
+        http.addFilterBefore(utmDataFilter, JwtFilter.class);
 
         return http.build();
-    }
-
-    @Bean
-    public JwtFilter jwtFilter() {
-        return new JwtFilter();
-    }
-
-    @Bean
-    public UtmDataFilter utmDataFilter() {
-        return new UtmDataFilter();
     }
 
     @Bean

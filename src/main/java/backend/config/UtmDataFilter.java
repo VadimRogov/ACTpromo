@@ -15,7 +15,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 import java.io.IOException;
 
 @Component
-@Order(2)
 public class UtmDataFilter extends OncePerRequestFilter {
 
     private static final Logger logger = LoggerFactory.getLogger(UtmDataFilter.class);
