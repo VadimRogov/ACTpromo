@@ -2,7 +2,6 @@ package backend.service;
 
 import backend.model.Admin;
 import backend.repository.AdminRepository;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 

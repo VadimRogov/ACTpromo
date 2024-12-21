@@ -3,11 +3,11 @@ package backend.dto.analitics;
 public class TrafficSourceStats {
 
     private String source;
-    private int visit;
+    private long visit;
 
     public TrafficSourceStats() {}
 
-    public TrafficSourceStats(String referer, int visit) {
+    public TrafficSourceStats(String referer, long visit) {
         this.source = referer;
         this.visit = visit;
     }
@@ -20,11 +20,11 @@ public class TrafficSourceStats {
         this.source = source;
     }
 
-    public int getVisit() {
+    public long getVisit() {
         return visit;
     }
 
-    public void setVisit(int visit) {
+    public void setVisit(long visit) {
         this.visit = visit;
     }
 }

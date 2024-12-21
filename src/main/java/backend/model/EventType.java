@@ -5,5 +5,6 @@ public enum EventType {
     CLICK,
     EXIT,
     VIEW,
-    CUBE
+    CUBE,
+    MAIN_SHOP
 }
