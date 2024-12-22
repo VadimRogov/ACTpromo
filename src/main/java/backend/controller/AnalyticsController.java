@@ -9,6 +9,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.ExampleObject;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -37,13 +38,15 @@ public class AnalyticsController {
     }
 
 
-    @Operation(summary = "Получить количество уникальных посетителей", description = "Возвращает количество уникальных посетителей сайта")
+    @Operation(summary = "Получить количество уникальных посетителей",
+            description = "Возвращает количество уникальных посетителей сайта")
     @ApiResponses({
             @ApiResponse(
                     responseCode = "200",
                     description = "Данные успешно получены",
                     content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = Map.class, example = "{\"count\": 123}"))),
+                            schema = @Schema(implementation = Map.class),
+                            examples = @ExampleObject(value = "{\"count\": 123}"))),
             @ApiResponse(
                     responseCode = "401",
                     description = "Недействительный или отсутствующий токен авторизации",

@@ -48,4 +48,15 @@ public class UserActivityService {
     public List<UserActivity> getUserActivityByIp(String ip) {
         return userActivityRepository.findByUserIp(ip);
     }
+
+    @Transactional
+    public Long deleteUserActivityByIp(UserActivity userActivity) {
+        userActivityRepository.delete(userActivity);
+        return userActivity.getId();
+    }
+
+    @Transactional
+    public void deleteAllUserActivities() {
+        userActivityRepository.deleteAll();
+    }
 }
