@@ -16,16 +16,16 @@ public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
+    @Lob
     @Column(name = "title", nullable = false)
     private String title;
-
+    @Lob
     @Column(name = "author", nullable = false)
     private String author;
-
+    @Lob
     @Column(name = "description", nullable = false)
     private String description;
-
+    @Lob
     @Column(name = "url", nullable = false)
     private String url;
 

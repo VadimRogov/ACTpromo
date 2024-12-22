@@ -15,10 +15,10 @@ public class Comment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private int id;
-
+    @Lob
     @Column(name = "content", nullable = false)
     private String content; // Текст комментария
-
+    @Lob
     @Column(name = "author", nullable = false)
     private String author; // Автор комментария
 }
