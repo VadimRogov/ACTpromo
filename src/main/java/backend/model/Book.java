@@ -16,17 +16,17 @@ public class Book {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @Lob
-    @Column(name = "title", nullable = false)
+
+    @Column(name = "title", nullable = false, columnDefinition = "TEXT")
     private String title;
-    @Lob
-    @Column(name = "author", nullable = false)
+
+    @Column(name = "author", nullable = false, columnDefinition = "TEXT")
     private String author;
-    @Lob
-    @Column(name = "description", nullable = false)
+
+    @Column(name = "description", nullable = false, columnDefinition = "TEXT")
     private String description;
-    @Lob
-    @Column(name = "url", nullable = false)
+
+    @Column(name = "url", nullable = false, columnDefinition = "TEXT")
     private String url;
 
     @OneToMany(mappedBy = "book", cascade = CascadeType.ALL, fetch = FetchType.EAGER)
