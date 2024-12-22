@@ -14,7 +14,7 @@ RUN git clone https://github.com/BaronGalileo/Act-books . || true
 RUN git checkout main
 
 # Обновляем репозиторий до последней версии
-RUN git pull origin main
+RUN git pull
 
 # Устанавливаем зависимости
 RUN npm install
