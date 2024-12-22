@@ -7,7 +7,7 @@ public class TimeOnSiteSummary {
     // Конструктор
     public TimeOnSiteSummary(long timeOnSite, long avgTimeOnSite) {
         this.timeOnSite = timeOnSite;
-        this.avgTimeOnSite = avgTimeOnSite; // Округляем среднее время
+        this.avgTimeOnSite = avgTimeOnSite;
     }
 
     // Геттеры и сеттеры

@@ -145,7 +145,7 @@ public class AnalyticsController {
             String username = jwtUtil.getUsernameFromToken(token);
 
             if (!"admin".equals(username)) {
-                System.out.println("Access denied for user: " + username);
+                System.out.println("Пользователю отказано в доступе: " + username);
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -224,7 +224,7 @@ public class AnalyticsController {
 
             // Проверяем права доступа
             if (!"admin".equals(username)) {
-                System.out.println("Access denied for user: " + username);
+                System.out.println("Пользователю отказано в доступе: " + username);
                 return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
             }
 
@@ -275,11 +275,11 @@ public class AnalyticsController {
             return ResponseEntity.ok(stats);
         } catch (JwtException e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Collections.singletonList(new InteractiveElementStats("Unauthorized", 0L)));
+                    .body(Collections.singletonList(new InteractiveElementStats("Несанкционированный доступ", 0L)));
         } catch (Exception e) {
             e.printStackTrace();
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(Collections.singletonList(new InteractiveElementStats("Error", 0L)));
+                    .body(Collections.singletonList(new InteractiveElementStats("Ошибка", 0L)));
         }
     }
 }

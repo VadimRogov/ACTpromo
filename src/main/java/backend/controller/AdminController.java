@@ -89,7 +89,7 @@ public class AdminController {
             String newPassword = changePasswordRequest.getNewPassword();
 
             if (adminService.changePassword(username, oldPassword, newPassword)) {
-                return ResponseEntity.ok("Password changed successfully");
+                return ResponseEntity.ok("Пароль успешно изменен");
             } else {
                 return ResponseEntity.status(HttpStatus.FORBIDDEN)
                         .body(new ErrorResponse("Старый пароль неверен", "Проверьте правильность введенного старого пароля"));

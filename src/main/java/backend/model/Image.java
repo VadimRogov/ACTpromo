@@ -6,14 +6,11 @@ import lombok.*;
 
 @Entity
 @Table(name = "images")
-@AllArgsConstructor
-@Getter
-@Setter
 public class Image {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id; // Изменено с int на Long
+    private Long id;
 
     @ManyToOne
     @JoinColumn(name = "book_id", nullable = false)
@@ -31,8 +28,14 @@ public class Image {
     @Column(name = "image_data", nullable = false)
     private byte[] imageData;
 
-    // Конструктор по умолчанию (нужен для JPA)
     public Image() {}
+
+    public Image(Book book, String fileName, ImageType imageType, byte[] imageData) {
+        this.book = book;
+        this.fileName = fileName;
+        this.imageType = imageType;
+        this.imageData = imageData;
+    }
 
     // Getters and Setters
     public Long getId() {
@@ -82,13 +85,13 @@ public class Image {
 
     // Вложенный класс Builder
     public static class Builder {
-        private Long id; // Изменено с int на Long
+        private Long id;
         private Book book;
         private String fileName;
         private ImageType imageType;
         private byte[] imageData;
 
-        public Builder id(Long id) { // Изменено с int на Long
+        public Builder id(Long id) {
             this.id = id;
             return this;
         }

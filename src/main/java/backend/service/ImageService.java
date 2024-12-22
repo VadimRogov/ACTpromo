@@ -30,11 +30,11 @@ public class ImageService {
         try {
             // Проверяем, что файл не пустой
             if (file.isEmpty()) {
-                throw new IllegalArgumentException("File is empty");
+                throw new IllegalArgumentException("Файл пустой");
             }
             // Находим книгу по ID
             Book book = bookRepository.findById(bookId)
-                    .orElseThrow(() -> new IllegalArgumentException("Book not found with ID: " + bookId));
+                    .orElseThrow(() -> new IllegalArgumentException("Книга не найдена с ID: " + bookId));
 
             // Создаем объект Image с использованием Builder
             Image image = Image.builder()
@@ -47,20 +47,20 @@ public class ImageService {
             return imageRepository.save(image);
 
         } catch (IOException e) {
-            throw new RuntimeException("Failed to save image", e);
+            throw new RuntimeException("Не удалось сохранить картинку", e);
         }
     }
     @Transactional
     // Метод для получения изображения по ID
     public MultipartFile getImageById(Long id) {
         Image image = imageRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Image not found with ID: " + id));
+                .orElseThrow(() -> new RuntimeException("Картинка с ID не найдена: " + id));
 
         // Создаем MultipartFile из бинарных данных изображения
         return new CustomMultipartFile(
                 image.getFileName(), // Используем имя файла из базы данных
                 image.getImageData(),
-                "image/jpeg" // MIME-тип (можно изменить на соответствующий)
+                "image/jpeg"
         );
     }
 

@@ -78,7 +78,7 @@ public class BookController {
             Optional<Book> bookOptional = bookService.getBookById(id);
 
             // Если книга не найдена, возвращаем 404
-            if (bookOptional.isEmpty()) {
+            if (bookOptional.isEmpty() || !bookOptional.get().getId().equals(id)) {
                 return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
             }
 

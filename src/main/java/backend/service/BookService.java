@@ -33,7 +33,7 @@ public class BookService {
         if (bookRepository.existsById(id)) {
             bookRepository.deleteById(id);
         } else {
-            throw new EntityNotFoundException("Book with id " + id + " not found");
+            throw new EntityNotFoundException("Книга с id " + id + " не найдена");
         }
     }
 

@@ -28,13 +28,14 @@ public class AnalyticsService {
                 .count();
     }
 
-
-
     // Метод для вычисления исходного трафика (Метод определяет уникальные источники трафика и число пользователей которые перешли с этого URL)
     public List<TrafficSourceStats> getTrafficSources() {
         return userActivityRepository.findAll().stream()
-                .filter(activity -> activity.getReferer() != null) // Фильтруем только события с заполненным referer
-                .collect(Collectors.groupingBy(UserActivity::getReferer, Collectors.summingLong(UserActivity::getCountEvent))) // Группируем по referer и суммируем countEvent
+                .filter(activity -> activity.getReferer() != null && activity.getReferer().isEmpty()) // Фильтруем только события с заполненным referer
+                .collect(Collectors.groupingBy(
+                        UserActivity::getReferer,
+                        Collectors.summingLong(UserActivity::getCountEvent))) // Группируем по referer и суммируем countEvent
+
                 .entrySet().stream()
                 .map(entry -> {
                     TrafficSourceStats stats = new TrafficSourceStats();

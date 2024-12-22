@@ -12,11 +12,11 @@ import java.util.List;
 @Service
 public class UserActivityService {
     private final UserActivityRepository userActivityRepository;
-    private final EntityManager entityManager; // Добавляем EntityManager
+    private final EntityManager entityManager;
 
     public UserActivityService(UserActivityRepository userActivityRepository, EntityManager entityManager) {
         this.userActivityRepository = userActivityRepository;
-        this.entityManager = entityManager; // Инжектируем EntityManager
+        this.entityManager = entityManager;
     }
 
     @Transactional

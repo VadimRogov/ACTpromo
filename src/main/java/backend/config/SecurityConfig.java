@@ -16,7 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 public class SecurityConfig {
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter, UtmDataFilter utmDataFilter) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtFilter jwtFilter) throws Exception {
         http
                 .csrf(AbstractHttpConfigurer::disable) // Отключаем CSRF
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Отключаем сессии
@@ -24,8 +24,12 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-ui/**").permitAll()
                         .requestMatchers("/backend/swagger-ui/**").permitAll()
                         .requestMatchers("/v3/api-docs/**").permitAll()
-                        .requestMatchers("/api/**").permitAll()
-                        .requestMatchers("/api/utm/**").permitAll() // Разрешаем доступ к UTM-маршрутам
+                        .requestMatchers("/api/analytics/**").permitAll()
+                        .requestMatchers("/api/images/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/activity/**").permitAll()
+                        .requestMatchers("/api/books/**").permitAll()
+                        .requestMatchers("/api/comments/**").permitAll()
                         .requestMatchers("/index.html").permitAll()
                         .requestMatchers("/static/**").permitAll()
                         .anyRequest().authenticated() // Все остальные запросы требуют аутентификации
@@ -33,10 +37,6 @@ public class SecurityConfig {
 
         // Добавляем фильтр для обработки JWT перед UsernamePasswordAuthenticationFilter
         http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
-        // Добавляем фильтр для обработки UTM-меток перед JwtFilter
-        http.addFilterBefore(utmDataFilter, JwtFilter.class);
-
 
         return http.build();
     }

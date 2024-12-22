@@ -54,6 +54,6 @@ public class CustomMultipartFile implements MultipartFile {
 
     @Override
     public void transferTo(java.io.File dest) throws IOException, IllegalStateException {
-        throw new UnsupportedOperationException("Transfer to file is not supported");
+        throw new UnsupportedOperationException("Передача в файл не поддерживается");
     }
 }
